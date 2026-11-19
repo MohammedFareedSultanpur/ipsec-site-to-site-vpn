@@ -1,0 +1,11 @@
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.vscode/
+.idea/
+
+# Scratch / large captures (keep only the curated .pcap files in evidence/)
+*.tmp
+*.bak

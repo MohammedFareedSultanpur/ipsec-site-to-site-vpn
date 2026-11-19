@@ -1,0 +1,109 @@
+! Device: HQ-R1
+! Role: Headquarters edge router (IPsec peer, NAT/PAT)
+! Lab: Cisco CML Free, IOL (iol-xe-serial-4eth), IOS XE 17.18
+! Note: pre-shared key replaced with <PSK>
+!
+!
+! Last configuration change at 11:01:43 UTC Wed Nov 11 2026
+!
+version 17.18
+service timestamps debug datetime msec
+service timestamps log datetime msec
+!
+hostname HQ-R1
+!
+boot-start-marker
+boot-end-marker
+!
+no aaa new-model
+!
+ip cef
+login on-success log
+no ipv6 cef
+!
+memory free low-watermark processor 79866
+!
+spanning-tree mode rapid-pvst
+!
+crypto isakmp policy 10
+ encryption aes 256
+ hash sha256
+ authentication pre-share
+ group 14
+crypto isakmp key <PSK> address 198.51.100.2
+!
+crypto ipsec transform-set TS-AES esp-aes 256 esp-sha256-hmac
+ mode tunnel
+!
+crypto map CMAP 10 ipsec-isakmp
+ set peer 198.51.100.2
+ set transform-set TS-AES
+ match address VPN-TRAFFIC
+!
+interface Ethernet0/0
+ description LAN to PC1
+ ip address 192.168.10.1 255.255.255.0
+ ip nat inside
+!
+interface Ethernet0/1
+ description WAN to ISP
+ ip address 203.0.113.1 255.255.255.252
+ ip nat outside
+ crypto map CMAP
+!
+interface Ethernet0/2
+ no ip address
+ shutdown
+!
+interface Ethernet0/3
+ no ip address
+ shutdown
+!
+interface Serial1/0
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial1/1
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial1/2
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial1/3
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+ip forward-protocol nd
+!
+ip http server
+ip http secure-server
+ip nat inside source list NAT-ACL interface Ethernet0/1 overload
+ip route 0.0.0.0 0.0.0.0 203.0.113.2
+ip ssh bulk-mode 131072
+!
+ip access-list extended NAT-ACL
+ 10 deny ip 192.168.10.0 0.0.0.255 192.168.20.0 0.0.0.255
+ 20 permit ip 192.168.10.0 0.0.0.255 any
+ip access-list extended VPN-TRAFFIC
+ 10 permit ip 192.168.10.0 0.0.0.255 192.168.20.0 0.0.0.255
+no logging btrace
+!
+control-plane
+!
+line con 0
+ activation-character 13
+ logging synchronous
+line aux 0
+ activation-character 13
+line vty 0 4
+ activation-character 13
+ login
+ transport input ssh
+!
+end
